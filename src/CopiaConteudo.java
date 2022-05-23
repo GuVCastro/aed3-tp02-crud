@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class CopiaConteudo {
+    // Metodo copia registros de arquivo temporario para arquivo de indices
     public void copia_conteudo(String arq_origem, String arq_destino) {
  
         FileInputStream fis = null;
@@ -16,7 +17,7 @@ public class CopiaConteudo {
             byte[] buffer = new byte[120];
             int numero_bytes = 0;
  
-            System.out.println("Compiando dados entre arquivos");
+            System.out.println("Copiando dados entre arquivos");
  
             // Lê bytes do arquivo de origem em blocos de até 120 bytes e copia para arquivo de destino
             while ((numero_bytes = fis.read(buffer)) != -1) {

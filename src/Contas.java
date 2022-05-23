@@ -15,6 +15,7 @@ public class Contas {
     protected float saldo;
     DecimalFormat decimal = new DecimalFormat("#,##0.00");
 
+    // Instanciamento de atributos
     public Contas(int id_conta, String nome, String cpf, String cidade, int qtd_transferencias, float saldo) {
 
         this.id_conta = id_conta;
@@ -45,6 +46,7 @@ public class Contas {
         this.saldo = 0F;
     }
 
+    // Metodo concatena atributos para uma só String
     public String toString() {
         return "Id : " + id_conta +
                "\nNome: " + nome +
@@ -54,6 +56,7 @@ public class Contas {
                "\nSaldo: R$ " + decimal.format(saldo) + "\n";
     }
 
+    // Metodo converte atributos de objeto para vetor de bytes
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -68,6 +71,7 @@ public class Contas {
         return baos.toByteArray();
     }
 
+    // Metodo tras valores binários de arquivo para serem atribuidos a objetos
     public void fromByteArray(byte[] ba) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(ba);
         DataInputStream dis = new DataInputStream(bais);

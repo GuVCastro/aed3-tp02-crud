@@ -273,7 +273,7 @@ public class Dados {
             fout.seek(pos);
             fout.writeByte(1);
 
-            // Remove no arq de indices
+            // Remove no arq de indices trocando id por -1
             while(pos_index <= fout_id.length()) {
                 try {
                     ba = new byte[12];

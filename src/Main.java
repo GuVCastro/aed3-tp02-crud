@@ -65,6 +65,7 @@ public class Main {
 
                 // Metodos estao dispostos na mesma ordem do menu principal 
                 switch (op) {
+                    // Cadastro de cliente
                     case 1:
                         imprime_mensagem("CADASTRO DE CLIENTE");
 
@@ -80,6 +81,7 @@ public class Main {
                         dados.create_conta(nome, cpf, cidade, saldo, db, index);
                         break;
 
+                    // Atualizar conta
                     case 2:
                         imprime_mensagem("ATUALIZAR CONTA");
 
@@ -100,6 +102,7 @@ public class Main {
                         dados.update_conta(conta_atualizada, db, index);
                         break;
 
+                    // Pesquisa (utilizando pesquisa binaria)
                     case 3:
                         imprime_mensagem("PESQUISA");
 
@@ -109,6 +112,7 @@ public class Main {
                         dados.pesquisa_conta(id_conta, db, index);
                         break;
 
+                    // Deletar conta
                     case 4:
                         imprime_mensagem("DELETAR CONTA");
 
@@ -118,6 +122,7 @@ public class Main {
                         dados.delete_conta(id_conta, db, index);
                         break;
 
+                    // Realiza transferencia entre contas
                     case 5:
                         imprime_mensagem("TRANSFERENCIA");
 
@@ -133,13 +138,19 @@ public class Main {
                         dados.transferencia_contas(id_conta1, id_conta2, valor, db);
                         break;
 
+                    // Pesquisa por nome em lista invertida
                     case 6:
+                        imprime_mensagem("PESQUISA POR NOME");
+
                         System.out.print("Insira o nome completo do cliente: ");
                         nome = input.nextLine();
                         dados.pesquisar_por_nome(nome);
                         break;
 
+                    // Pesquisa por cidade em lista invertida
                     case 7:
+                        imprime_mensagem("PESQUISA POR CIDADE");
+
                         System.out.print("Insira o nome da cidade do cliente: ");
                         cidade = input.nextLine();
                         dados.pesquisar_por_cidade(cidade);
@@ -155,6 +166,7 @@ public class Main {
                 }
             } while (op != 0);
 
+            // Fecha arquivos
             db.close();
             index.close();
         }

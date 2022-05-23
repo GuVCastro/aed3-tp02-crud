@@ -8,6 +8,7 @@ public class Index {
     protected int id_conta;
     protected long endereco;
 
+    // Instanciamento de atributos
     public Index(int id_conta, long endereco) {
         this.id_conta = id_conta;
         this.endereco = endereco;
@@ -23,6 +24,7 @@ public class Index {
         this.endereco = -1;
     }
 
+    // Metodo converte atributos de objeto para vetor de bytes
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -33,6 +35,7 @@ public class Index {
         return baos.toByteArray();
     }
 
+    // Metodo tras valores binários de arquivo para serem atribuidos a objetos
     public void fromByteArray(byte[] ba) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(ba);
         DataInputStream dis = new DataInputStream(bais);
