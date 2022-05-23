@@ -1,5 +1,4 @@
 import java.io.RandomAccessFile;
-import java.sql.PseudoColumnUsage;
 import java.util.Scanner;
 
 public class Main {
@@ -54,8 +53,6 @@ public class Main {
                 System.out.println(" Opção 3  Buscar Conta                  ");
                 System.out.println(" Opção 4  Deletar Conta                 ");
                 System.out.println(" Opção 5  Realizar Transferência        ");
-                System.out.println(" Opção 6  Pesquisar por nome            ");
-                System.out.println(" Opção 7  Pesquisar por cidade          ");
                 System.out.println(" Opção 0  Encerrar Programa             ");
                 System.out.println("_________________________________________\n");
                 System.out.print("Digite uma Opção: ");
@@ -106,7 +103,7 @@ public class Main {
                         System.out.print("Insira o Id do cliente: ");
                         id_conta = input.nextInt();
 
-                        dados.pesquisa_conta(id_conta, db, index);
+                        dados.pesquisa_conta(id_conta, db);
                         break;
 
                     case 4:
@@ -115,7 +112,7 @@ public class Main {
                         System.out.print("Insira o Id do cliente: ");
                         id_conta = input.nextInt();
 
-                        dados.delete_conta(id_conta, db, index);
+                        dados.delete_conta(id_conta, db);
                         break;
 
                     case 5:
@@ -134,15 +131,9 @@ public class Main {
                         break;
 
                     case 6:
-                        System.out.print("Insira o nome completo do cliente: ");
-                        nome = input.nextLine();
-                        dados.pesquisar_por_nome(nome);
-                        break;
-
-                    case 7:
-                        System.out.print("Insira o nome da cidade do cliente: ");
-                        cidade = input.nextLine();
-                        dados.pesquisar_por_cidade(cidade);
+                        System.out.print("Insira o Id do cliente de origem: ");
+                        id_conta = input.nextInt();
+                        dados.debug(id_conta, db, index);
                         break;
 
                     case 0:
@@ -156,7 +147,6 @@ public class Main {
             } while (op != 0);
 
             db.close();
-            index.close();
         }
         catch (Exception e){
             e.printStackTrace();

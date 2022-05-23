@@ -1,0 +1,303 @@
+ // public void debug(int id_conta, RandomAccessFile fout, RandomAccessFile fout_id) throws IOException {
+    //     byte ba[];
+    //     int tam_registro, lapide;
+    //     long pos;
+    //     Boolean flag_encontrou = false;
+
+    //     Ordenacao od = new Ordenacao();
+
+    //     od.ordenacao_externa(fout_id);
+
+    //     System.out.print("Tamanho do arquivo de indices: "); System.out.println(fout_id.length());
+
+    //     fout.seek(0);
+    //     fout_id.seek(0);
+
+
+        // while (true) {
+        //     try {
+        //         int id = fout_id.readInt();
+
+        //         if (id == id_conta) {
+        //             pos = fout_id.readLong();
+        //             break;
+        //         }
+        //         else {
+        //             fout_id.readLong();
+        //         }
+        //     } catch(EOFException err) {
+        //         pos = -1;
+        //         break;
+        //     }
+
+        // }
+
+        // Index index = new Index();
+        // Contas conta = new Contas();
+
+        // pos = busca_binaria(id_conta);
+
+        // try {
+        //     if (pos != -1) {
+
+        //         System.out.println("boo");
+        //         System.out.println(pos);
+
+        //         fout.seek(pos);
+        //         fout.readByte();
+        //         tam_registro = fout.readInt();
+
+        //         // Le dados do registro
+        //         ba = new byte[tam_registro];
+        //         fout.read(ba);
+        //         conta.fromByteArray(ba);
+
+        //         //long pos = fin.getFilePointer();
+
+        //         System.out.println("\n" + conta);
+        //     }
+        //     else {
+        //         imprime_mensagem("Cliente não econtrado!");
+        //     }
+        // } catch(Exception e) {
+        //     e.printStackTrace();
+        // }
+        // pos = busca_binaria(id_conta);
+
+        //   try {
+        //     if (pos != -1) {
+        //         System.out.println(pos);
+        //         System.out.println("boo");
+
+        //         if (id_conta == 1)
+        //             pos++;
+                
+        //         fout.seek(pos);
+
+        //         lapide = fout.readByte();
+        //         tam_registro = fout.readInt();
+
+        //         ba = new byte[tam_registro];
+        //         fout.read(ba);
+        //         conta.fromByteArray(ba);
+
+        //         System.out.println(conta);
+        //     }
+        //     else {
+        //         imprime_mensagem("Cliente não econtrado!");
+        //     }
+        // } catch(Exception e) {
+        //     e.printStackTrace();
+        // }
+
+        // ba = new byte[12];
+        // fout_id.read(ba);
+        // index.fromByteArray(ba);
+
+        // fout.seek(index.endereco);
+
+        // lapide = fout.readByte();
+        // tam_registro = fout.readInt();
+
+        // ba = new byte[tam_registro];
+        // fout.read(ba);
+        // conta.fromByteArray(ba);
+
+        // while(pos <= fout_id.length()) {
+        //     try {
+        //         ba = new byte[12];
+        //         fout_id.read(ba);
+        //         index.fromByteArray(ba);
+
+        //         pos += 12;
+                
+        //         if(index.id_conta == id_conta) {
+        //             flag_encontrou = true;
+
+        //             System.out.println(index.id_conta);
+        //             System.out.println(index.endereco);
+
+        //             fout.seek(index.endereco);
+
+        //             lapide = fout.readByte();
+        //             tam_registro = fout.readInt();
+
+        //             ba = new byte[tam_registro];
+        //             fout.read(ba);
+        //             conta.fromByteArray(ba);
+
+        //             System.out.println(conta);
+
+        //             break;
+        //         }
+        //     }
+        //     catch(EOFException err) {
+        //         break;
+        //     }
+        // }
+
+        // if(!flag_encontrou) {
+        //     imprime_mensagem("Cliente não encontrado!");
+        // }
+    // }
+    
+
+    // public void update_conta(Contas conta_autualizada, RandomAccessFile fout) throws IOException {
+    //     long pos;
+    //     int tam_registro;
+    //     byte lapide, ba[], conta_novo_registro[];
+    //     boolean flag_encontrou = false;
+
+    //     Contas conta = new Contas();
+
+    //     // Le Id do ultimo registro
+    //     fout.seek(0);
+    //     fout.readInt();
+
+    //     // Verifica todos os registros ate encontrar Id inserido
+    //     while(true) {
+    //         try {
+    //             // Le cabecalho do registro
+    //             pos = fout.getFilePointer();
+    //             lapide = fout.readByte();
+    //             tam_registro = fout.readInt();
+
+    //             // Le dados de registro
+    //             ba = new byte[tam_registro];
+    //             fout.read(ba);
+    //             conta.fromByteArray(ba);
+
+    //             if(lapide == 0 && conta.id_conta == conta_autualizada.id_conta) {
+    //                 flag_encontrou = true;
+
+    //                 // Atualiza registro e converto para vetor de bytes
+    //                 conta_autualizada.qtd_transferencias = conta.qtd_transferencias;
+    //                 conta_novo_registro = conta_autualizada.toByteArray();
+
+    //                 // Se tamanho do registro nao aumentou, escreve na mesma posicao
+    //                 if(conta_novo_registro.length <= tam_registro) {
+    //                     fout.seek(pos);
+
+    //                     fout.readByte();
+    //                     fout.readInt();
+    //                     fout.write(conta_novo_registro);
+    //                 }
+    //                 // Se aumentou, deleta antigo registro e escreve novo no final do arquivo
+    //                 else{
+    //                     fout.seek(pos);
+    //                     fout.writeByte(1);
+
+    //                     fout.seek(fout.length());
+    //                     fout.writeByte(0);
+    //                     fout.writeInt(conta_novo_registro.length);
+    //                     fout.write(conta_novo_registro);
+    //                 }
+
+    //                 imprime_mensagem("Conta atualizada!\nNovos dados: ");
+    //                 System.out.println(conta_autualizada);
+
+    //                 break;
+    //             }
+    //         }
+    //         catch(EOFException err) {
+    //             break;
+    //         }
+    //     }
+
+    //     if(!flag_encontrou) {
+    //         imprime_mensagem("Cliente não encontrado!");
+    //     }
+    // }
+
+    // public void delete_conta(int id_conta, RandomAccessFile fout) throws IOException{
+    //     long pos;
+    //     int tam_registro;
+    //     byte lapide, ba[];
+    //     boolean flag_encontrou = false;  
+        
+    //     Contas conta = new Contas();
+
+    //     // Le Id do ultimo registro
+    //     fout.seek(0);
+    //     fout.readInt();
+
+    //     // Verifica todos os registros ate encontrar Id inserido
+    //     while(true) {
+    //         try {
+    //             // Le cabecalho do registro 
+    //             pos = fout.getFilePointer();
+    //             lapide = fout.readByte();
+    //             tam_registro = fout.readInt();
+
+    //             // Le dados do registro 
+    //             ba = new byte[tam_registro];
+    //             fout.read(ba);
+    //             conta.fromByteArray(ba);
+
+    //             // Se encontrar registro, alterar valor da lapide para 1 
+    //             if(lapide == 0 && conta.id_conta == id_conta) {
+    //                 flag_encontrou = true;
+
+    //                 fout.seek(pos);
+    //                 fout.writeByte(1);
+
+    //                 imprime_mensagem("Conta removida!\n Dados removidos:");
+    //                 System.out.println(conta);
+
+    //                 break;
+    //             }
+    //         }
+    //         catch(EOFException err) {
+    //             break;
+    //         }
+    //     }
+
+    //     if(!flag_encontrou) {
+    //         imprime_mensagem("Cliente não encontrado!");
+    //     }
+    // }
+
+    // public void pesquisa_conta(int id_conta, RandomAccessFile fin) throws IOException {
+    //     byte lapide;
+    //     int tam_registro;
+    //     byte ba[];
+    //     boolean flag_encontrou = false;
+        
+    //     Contas conta = new Contas();
+
+    //     // Le Id do ultimo registro
+    //     fin.seek(0);
+    //     fin.readInt();
+
+    //     // Verifica todos os registros ate encontrar Id inserido
+    //     while(true) {
+    //         try {
+    //             // Le cabecalho do registro 
+    //             lapide = fin.readByte();
+    //             tam_registro = fin.readInt();
+
+    //             // Le dados do registro
+    //             ba = new byte[tam_registro];
+    //             fin.read(ba);
+    //             conta.fromByteArray(ba);
+
+    //             long pos = fin.getFilePointer();
+
+    //             // Se encontrar registro com Id inserido, mostre os dados 
+    //             if(lapide == 0 && conta.id_conta == id_conta) {
+    //                 flag_encontrou = true;
+    //                 System.out.println(pos);
+    //                 System.out.println(tam_registro);
+    //                 System.out.println("\n" + conta);
+    //                 break;
+    //             }
+    //         }
+    //         catch(EOFException err) {
+    //             break;
+    //         }
+    //     }
+
+    //     if(!flag_encontrou) {
+    //         imprime_mensagem("Cliente não encontrado!");
+    //     }
+    // }

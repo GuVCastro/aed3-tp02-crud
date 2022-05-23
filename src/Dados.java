@@ -11,7 +11,45 @@ public class Dados {
         System.out.println("__________________________________________\n");
     }
 
-    public void create_conta(String nome, String cpf, String cidade, Float saldo_inicial, RandomAccessFile fout) throws IOException {
+    public long busca_binaria(int id_conta) throws IOException {
+        // Abre arq e indices com permissao de leitura
+        RandomAccessFile fin = new RandomAccessFile("index.bin", "r");
+        
+        // Variaveis relacionadas a busca binaria
+        long esq = 0, dir = fin.length() / 12, meio, endereco;
+        int id_lido;
+
+        try {
+            while (esq <= dir) {
+                meio = ((esq + dir) / 2);
+                fin.seek(meio * 12);        // Divisao por 12 ocorre porque registros individuais tem 12 bytes
+                id_lido = fin.readInt();
+
+                if (id_conta < id_lido) {
+                    dir = meio - 1;
+                }
+                else if (id_conta > id_lido) {
+                    esq = meio + 1;
+                }
+                else {
+                    // Se endereco e encontrado, leia, feche o arq e retorne seu valor
+                    endereco = fin.readLong();
+                    fin.close();
+                    return endereco;
+                }
+            }
+        } catch(EOFException err) {
+            // Fecha arquivo e retorna -1 em caso de erro
+            fin.close();
+            return -1;
+        }
+
+        // Fecha arquivo e retorna -1 caso endereco nao seja encontrado
+        fin.close();
+        return -1;
+    }
+
+    public void create_conta(String nome, String cpf, String cidade, Float saldo_inicial, RandomAccessFile fout, RandomAccessFile fout_id) throws IOException {
         int ultimo_id, proximo_id;
         byte ba[];
 
@@ -19,179 +57,249 @@ public class Dados {
         fout.seek(0);
         ultimo_id = fout.readInt();
 
-        // Instancia objeto para novo registro
+        // Instancia objeto para novo registro no arq de dados
         Contas conta = new Contas(ultimo_id, nome, cpf, cidade, 0, saldo_inicial);
+
+        // Instancia objeto para novo registro no arq de indice
+        Index index = new Index(ultimo_id);
 
         // Escreve Id do ultimo registro acrescido de 1 no cabecalho
         fout.seek(0);
         proximo_id = ultimo_id + 1;
         fout.writeInt(proximo_id);
 
-        // Converte objeto para vetor de bites
-        ba = conta.toByteArray();
         fout.seek(fout.length());
+        
+        index.endereco = fout.getFilePointer();
 
-        // Escreve registro no arquivo
+        ba = index.toByteArray();
+        fout_id.seek(fout_id.length());
+        fout_id.write(ba);
+
+        // Converte objeto conta para vetor de bites
+        ba = conta.toByteArray();
+
+        // Escreve registro no arquivo de dados
         fout.writeByte(0);          // Lapide
         fout.writeInt(ba.length);   // Tamanho do registro
         fout.write(ba);             // Conteudo do registro
 
-        imprime_mensagem("Cliente cadastrado com sucesso!\nDados: ");
-        System.out.println(conta);
+        
+        // Insere nome do cliente e id no arquivo de nomes
+        RandomAccessFile fout_nome = new RandomAccessFile("nome.bin", "rw");
+        Nome registro_nome = new Nome();
+
+        registro_nome.nome = nome;
+        registro_nome.id_conta = ultimo_id;
+
+        ba = registro_nome.toByteArray();
+
+        fout_nome.seek(fout_nome.length());
+        fout_nome.writeInt(ba.length);
+
+        fout_nome.write(ba);
+
+         // Insere cidade do cliente e id no arquivo de cidades
+         RandomAccessFile fout_cidade = new RandomAccessFile("cidade.bin", "rw");
+         Cidade registro_cidade = new Cidade();
+ 
+         registro_cidade.cidade = cidade;
+         registro_cidade.id_conta = ultimo_id;
+ 
+         ba = registro_cidade.toByteArray();
+ 
+         fout_cidade.seek(fout_cidade.length());
+         fout_cidade.writeInt(ba.length);
+ 
+         fout_cidade.write(ba);
+ 
+         // Exibe dados da conta criada
+         imprime_mensagem("Cliente cadastrado com sucesso!\nDados: ");
+         System.out.println(conta);
     }
 
-    public void update_conta(Contas conta_autualizada, RandomAccessFile fout) throws IOException {
-        long pos;
+    public void update_conta(Contas conta_atualizada, RandomAccessFile fout, RandomAccessFile fout_id) throws IOException {
+        long pos, pos_index = 0;
         int tam_registro;
-        byte lapide, ba[], conta_novo_registro[];
-        boolean flag_encontrou = false;
+        byte ba[], conta_novo_registro[];
 
+        // Instancia objetos relacionados ao arq de indices, dados e objeto responsável pela ordenação externa
+        Index index = new Index();
         Contas conta = new Contas();
+        Ordenacao od = new Ordenacao();
 
-        // Le Id do ultimo registro
-        fout.seek(0);
-        fout.readInt();
+        // Realiza ordenacao externa do arquivo de indices
+        od.ordenacao_externa(fout_id);
 
-        // Verifica todos os registros ate encontrar Id inserido
-        while(true) {
-            try {
-                // Le cabecalho do registro
-                pos = fout.getFilePointer();
-                lapide = fout.readByte();
+        // Realiza busca binária
+        pos = busca_binaria(conta_atualizada.id_conta);
+
+        try {
+            // Se busca encontra endereco, altera dados
+            if (pos != -1) {
+                fout.seek(pos);
+                fout.readByte();
                 tam_registro = fout.readInt();
 
-                // Le dados de registro
-                ba = new byte[tam_registro];
-                fout.read(ba);
-                conta.fromByteArray(ba);
+                conta_atualizada.qtd_transferencias = conta.qtd_transferencias;
+                conta_novo_registro = conta_atualizada.toByteArray();
 
-                if(lapide == 0 && conta.id_conta == conta_autualizada.id_conta) {
-                    flag_encontrou = true;
+                // Se tamanho do registro nao aumentou, escreve na mesma posicao no arq de dados
+                if(conta_novo_registro.length <= tam_registro) {
+                    fout.seek(pos);
 
-                    // Atualiza registro e converto para vetor de bytes
-                    conta_autualizada.qtd_transferencias = conta.qtd_transferencias;
-                    conta_novo_registro = conta_autualizada.toByteArray();
-
-                    // Se tamanho do registro nao aumentou, escreve na mesma posicao
-                    if(conta_novo_registro.length <= tam_registro) {
-                        fout.seek(pos);
-
-                        fout.readByte();
-                        fout.readInt();
-                        fout.write(conta_novo_registro);
-                    }
-                    // Se aumentou, deleta antigo registro e escreve novo no final do arquivo
-                    else{
-                        fout.seek(pos);
-                        fout.writeByte(1);
-
-                        fout.seek(fout.length());
-                        fout.writeByte(0);
-                        fout.writeInt(conta_novo_registro.length);
-                        fout.write(conta_novo_registro);
-                    }
-
-                    imprime_mensagem("Conta atualizada!\nNovos dados: ");
-                    System.out.println(conta_autualizada);
-
-                    break;
+                    fout.readByte();
+                    fout.readInt();
+                    fout.write(conta_novo_registro);
                 }
-            }
-            catch(EOFException err) {
-                break;
-            }
-        }
+                // Se aumentou, deleta antigo registro e escreve novo no final do arq de dados
+                else{
+                    // Escreve lápide no registro antigo
+                    fout.seek(pos);
+                    fout.writeByte(1);
 
-        if(!flag_encontrou) {
-            imprime_mensagem("Cliente não encontrado!");
+                    fout.seek(fout.length());
+                    pos = fout.getFilePointer();
+
+                    // Altera endereco do registro no arq de indices
+                    while(pos_index <= fout_id.length()) {
+                        try {
+                            ba = new byte[12];
+                            fout_id.read(ba);
+                            index.fromByteArray(ba);
+            
+                            if(index.id_conta == conta_atualizada.id_conta) {
+                                fout_id.seek(pos_index);
+                                index.id_conta = -1;
+                                ba = index.toByteArray();
+                                fout_id.write(ba);
+
+                                fout_id.seek(fout_id.length());
+                                index.id_conta = conta_atualizada.id_conta;
+                                index.endereco = pos;
+                                ba = index.toByteArray();
+                                fout_id.write(ba);
+
+                                break;
+                            }
+
+                            pos_index += 12;
+                        }
+                        catch(EOFException err) {
+                            break;
+                        }
+                    }
+
+                    // Escreve registro no final do arq de dados
+                    fout.writeByte(0);
+                    fout.writeInt(conta_novo_registro.length);
+                    fout.write(conta_novo_registro);
+                }
+
+                imprime_mensagem("Conta atualizada!\nNovos dados: ");
+                System.out.println(conta_atualizada);
+            }
+            else {
+                imprime_mensagem("Cliente não econtrado!");
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void pesquisa_conta(int id_conta, RandomAccessFile fin) throws IOException {
-        byte lapide;
-        int tam_registro;
+    public void pesquisa_conta(int id_conta, RandomAccessFile fin, RandomAccessFile fin_id) throws IOException {
         byte ba[];
-        boolean flag_encontrou = false;
-        
+        int tam_registro;
+        long pos;
+
+        // Instancia objetos relacionados ao arq de dados e objeto responsável pela ordenação externa
         Contas conta = new Contas();
+        Ordenacao od = new Ordenacao();
 
-        // Le Id do ultimo registro
-        fin.seek(0);
-        fin.readInt();
+        // Realiza ordenacao externa do arq de indices
+        od.ordenacao_externa(fin_id);
 
-        // Verifica todos os registros ate encontrar Id inserido
-        while(true) {
-            try {
-                // Le cabecalho do registro 
-                lapide = fin.readByte();
+        // Realiza busca binária
+        pos = busca_binaria(id_conta);
+
+        // Se busca encontra endereco, lê dados do registro no arq de dados
+        try {
+            if (pos != -1) {
+                fin.seek(pos);
+                fin.readByte();
                 tam_registro = fin.readInt();
 
-                // Le dados do registro 
+                // Le dados do registro
                 ba = new byte[tam_registro];
                 fin.read(ba);
                 conta.fromByteArray(ba);
 
-                // Se encontrar registro com Id inserido, mostre os dados 
-                if(lapide == 0 && conta.id_conta == id_conta) {
-                    flag_encontrou = true;
-                    System.out.println("\n" + conta);
-                    break;
-                }
+                System.out.println("\n" + conta);
             }
-            catch(EOFException err) {
-                break;
+            else {
+                imprime_mensagem("Cliente não econtrado!");
             }
-        }
-
-        if(!flag_encontrou){
-            imprime_mensagem("Cliente não encontrado!");
+        } catch(Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void delete_conta(int id_conta, RandomAccessFile fout) throws IOException{
-        long pos;
+    public void delete_conta(int id_conta, RandomAccessFile fout, RandomAccessFile fout_id) throws IOException{
+        long pos, pos_index = 0;
         int tam_registro;
         byte lapide, ba[];
-        boolean flag_encontrou = false;  
         
+        // Instancia objetos relacionados ao arq de indices, dados e objeto responsável pela ordenação externa
+        Index index = new Index();
         Contas conta = new Contas();
+        Ordenacao od = new Ordenacao();
 
-        // Le Id do ultimo registro
-        fout.seek(0);
-        fout.readInt();
+        // Realiza ordenacao externa do arq de indices
+        od.ordenacao_externa(fout_id);
 
-        // Verifica todos os registros ate encontrar Id inserido
-        while(true) {
-            try {
-                // Le cabecalho do registro 
-                pos = fout.getFilePointer();
-                lapide = fout.readByte();
-                tam_registro = fout.readInt();
+        // Realiza busca binária
+        pos = busca_binaria(id_conta);
 
-                // Le dados do registro 
-                ba = new byte[tam_registro];
-                fout.read(ba);
-                conta.fromByteArray(ba);
+        // Se busca encontra endereco, remove registro no arq de dados e insere -1 no campo id do arq de indices
+        if (pos != -1) {
+            fout.seek(pos);
+            fout.readByte();
+            tam_registro = fout.readInt();
 
-                // Se encontrar registro, alterar valor da lapide para 1 
-                if(lapide == 0 && conta.id_conta == id_conta) {
-                    flag_encontrou = true;
+            ba = new byte[tam_registro];
+            fout.read(ba);
+            conta.fromByteArray(ba);
 
-                    fout.seek(pos);
-                    fout.writeByte(1);
+            fout.seek(pos);
+            fout.writeByte(1);
 
-                    imprime_mensagem("Conta removida!\n Dados removidos:");
-                    System.out.println(conta);
+            // Remove no arq de indices
+            while(pos_index <= fout_id.length()) {
+                try {
+                    ba = new byte[12];
+                    fout_id.read(ba);
+                    index.fromByteArray(ba);
+    
+                    if(index.id_conta == id_conta) {
+                        fout_id.seek(pos_index);
+                        index.id_conta = -1;
+                        ba = index.toByteArray();
+                        fout_id.write(ba);
 
+                        imprime_mensagem("Conta removida!\n Dados removidos:");
+                        System.out.println(conta);
+
+                        break;
+                    }
+
+                    pos_index += 12;
+                }
+                catch(EOFException err) {
                     break;
                 }
             }
-            catch(EOFException err) {
-                break;
-            }
         }
-
-        if(!flag_encontrou) {
+        else {
             imprime_mensagem("Cliente não encontrado!");
         }
     }
@@ -212,7 +320,7 @@ public class Dados {
         // Verifica todos os registros ate encontrar Id inserido
         while(true) {
             try {
-                // Le cabecalho de registro
+                // Le cabecalho de registro no arq de dados
                 lapide = fout.readByte();
                 tam_registro = fout.readInt();
 
@@ -222,7 +330,7 @@ public class Dados {
                 if(!flag2_encontrou) 
                     pos_conta2 = fout.getFilePointer();
 
-                // Le dados do registro 
+                // Le dados do registro no arq de dados
                 ba = new byte[tam_registro];
                 fout.read(ba);
                 conta.fromByteArray(ba);
@@ -269,4 +377,62 @@ public class Dados {
             System.out.println("Cliente (origem): " + conta1.nome + "\nValor tranferido: R$ " + decimal.format(valor) + "\nCliente (destino): " + conta2.nome);
         }
     }
+
+    public void pesquisar_por_nome(String nome) throws IOException {
+        byte ba[];
+        int tam_nome;
+
+        Nome registro_nome = new Nome();
+        RandomAccessFile fin = new RandomAccessFile("nome.bin", "r");
+
+        fin.seek(0);
+
+        while (true) {
+            try {
+                tam_nome = fin.readInt();
+                ba = new byte[tam_nome];
+
+                fin.read(ba);
+                registro_nome.fromByteArray(ba);
+
+                if (registro_nome.nome.equals(nome)) {
+                    System.out.print("Id encontrado: " + registro_nome.id_conta);
+                    break;
+                }
+            }
+            catch(EOFException err) {
+                imprime_mensagem("Id correspondente não encontrado");
+                break;
+            }
+        }    
+    }
+    
+    public void pesquisar_por_cidade(String cidade) throws IOException {
+        byte ba[];
+        int tam_cidade;
+
+        Cidade registro_cidade = new Cidade();
+        RandomAccessFile fin = new RandomAccessFile("cidade.bin", "r");
+
+        fin.seek(0);
+
+        while (true) {
+            try {
+                tam_cidade = fin.readInt();
+                ba = new byte[tam_cidade];
+
+                fin.read(ba);
+                registro_cidade.fromByteArray(ba);
+
+                if (registro_cidade.cidade.equals(cidade)) {
+                    System.out.print("Id encontrado: " + registro_cidade.id_conta);
+                    break;
+                }
+            }
+            catch(EOFException err) {
+                imprime_mensagem("Id correspondente não encontrado");
+                break;
+            }
+        }    
+    } 
 }
